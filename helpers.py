@@ -7,6 +7,9 @@ transcribe-skill helpers — 起步实现，agent 可读可改。
   transcribe(...)       本地音频 → 文本 + SRT
   cleanup(...)          ASR 文本 → 清洗后文本
 
+通用机制（来自其他模块，re-export 方便用）：
+  chunk_audio / stitch_segments / segments_to_srt   见 audio.py + interaction-skills/
+
 撞到 helpers 不覆盖的事，**直接改这个文件**，并把学到的怪癖写进
 domain-skills/<平台>.md 或 interaction-skills/<机制>.md。
 """
@@ -19,6 +22,7 @@ from pathlib import Path
 import httpx
 
 from sources import Source, resolve as resolve_source  # noqa: F401
+from audio import chunk_audio, stitch_segments, segments_to_srt  # noqa: F401
 
 
 def download_audio(audio_url: str, dest: Path) -> Path:
