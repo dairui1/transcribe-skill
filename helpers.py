@@ -14,39 +14,11 @@ domain-skills/<平台>.md 或 interaction-skills/<机制>.md。
 import json
 import os
 import subprocess
-from dataclasses import dataclass, field
 from pathlib import Path
 
 import httpx
 
-
-@dataclass
-class Source:
-    audio_url: str
-    title: str = ""
-    meta: dict = field(default_factory=dict)
-
-
-def resolve_source(url: str) -> Source:
-    """
-    URL → 直链音频 + 标题。
-
-    起步策略：全部交给 yt-dlp（YouTube/B 站/绝大多数播客 RSS 都吃）。
-    平台特化（小宇宙的 __INITIAL_STATE__、Apple Podcasts 的 RSS 嗅探等）
-    撞到时由 agent 写 domain-skills/<平台>.md 并 self-heal 进这个函数。
-    """
-    out = subprocess.run(
-        ["yt-dlp", "-j", "--no-warnings", "-f", "bestaudio", url],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    info = json.loads(out.stdout)
-    return Source(
-        audio_url=info["url"],
-        title=info.get("title", ""),
-        meta={"duration": info.get("duration"), "uploader": info.get("uploader")},
-    )
+from sources import Source, resolve as resolve_source  # noqa: F401
 
 
 def download_audio(audio_url: str, dest: Path) -> Path:
