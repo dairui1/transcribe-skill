@@ -35,6 +35,13 @@ Path(f"./out/{src.title}.srt").write_text(result["srt"])
 Path(f"./out/{src.title}.txt").write_text(result["text"])
 ```
 
+要 diarization（区分说话人）？只有 `elevenlabs` engine 支持，见 [interaction-skills/diarization.md](./interaction-skills/diarization.md)：
+
+```python
+result = transcribe(audio, engine="elevenlabs", diarize=True)
+# result["segments"] 每段带 {start, end, speaker, text}
+```
+
 ## 清洗
 
 **ASR 输出必须清洗**——raw transcript 没标点、有错字、口癖密布，几乎不可读。
