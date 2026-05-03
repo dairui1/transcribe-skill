@@ -9,6 +9,7 @@ generic 嗅探，再失败 fallback 到 yt-dlp。
 """
 
 import json
+import os
 import re
 import subprocess
 from dataclasses import dataclass, field
@@ -218,13 +219,22 @@ def _join(base: str, href: str) -> str:
 # --------------------------------------------------------------------------- #
 
 def _ytdlp(url: str) -> Source:
-    """yt-dlp 兜底——YouTube/B 站/绝大多数视频站都吃。"""
-    out = subprocess.run(
-        ["yt-dlp", "-j", "--no-warnings", "-f", "bestaudio", url],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
+    """yt-dlp 兜底——YouTube/B 站/绝大多数视频站都吃。
+
+    YouTube 现在频繁触发 "Sign in to confirm you're not a bot"。
+    撞到时自动 retry 带 --cookies-from-browser <YTDLP_COOKIES_BROWSER>（默认 chrome）。
+    """
+    base = ["yt-dlp", "-j", "--no-warnings", "-f", "bestaudio", url]
+    out = subprocess.run(base, capture_output=True, text=True)
+    if out.returncode != 0:
+        if "Sign in to confirm" in out.stderr or "cookies" in out.stderr.lower():
+            browser = os.environ.get("YTDLP_COOKIES_BROWSER", "chrome")
+            out = subprocess.run(
+                base[:1] + ["--cookies-from-browser", browser] + base[1:],
+                capture_output=True, text=True, check=True,
+            )
+        else:
+            raise subprocess.CalledProcessError(out.returncode, base, out.stdout, out.stderr)
     info = json.loads(out.stdout)
     return Source(
         audio_url=info["url"],

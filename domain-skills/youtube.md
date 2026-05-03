@@ -23,7 +23,8 @@
 
 ## 例外（撞到再处理）
 
-- **会员限定 / 私享视频**：需要 cookies。yt-dlp 支持 `--cookies-from-browser chrome`，但要求用户授权
+- **"Sign in to confirm you're not a bot" 反爬**：YouTube 现在频繁触发。`sources._ytdlp` 已实现自动 retry——首次失败且 stderr 含此字样或 `cookies` 时，重试时带 `--cookies-from-browser <浏览器>`。浏览器名走环境变量 `YTDLP_COOKIES_BROWSER`，默认 `chrome`。前提是浏览器里登录了 YouTube
+- **会员限定 / 私享视频**：同样靠 `--cookies-from-browser` 拿到登录态后才能下
 - **直播流**：yt-dlp 能下，但要等结束或带 `--live-from-start`
 - **被墙的内容**：yt-dlp 错误信息会明示，让用户换网络
 - **超长视频（3 小时+）**：bestaudio 文件可能 200MB+，下载慢；考虑 `-f worstaudio` 给 ASR 用够了
