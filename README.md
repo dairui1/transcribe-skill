@@ -19,8 +19,7 @@ brew install yt-dlp ffmpeg
 export ELEVENLABS_API_KEY=...
 export GROQ_API_KEY=...
 
-# 清洗
-export OPENAI_API_KEY=...
+# 清洗：不需要 key——agent 自己读 transcript 直接清，见 SKILL.md「清洗」节
 ```
 
 ## 怎么用

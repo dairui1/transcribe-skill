@@ -1,11 +1,13 @@
 """
 transcribe-skill helpers — 起步实现，agent 可读可改。
 
-四个原语：
+三个原语：
   resolve_source(url)   URL → 音频 URL + 元数据
   download_audio(...)   下载到本地
   transcribe(...)       本地音频 → 文本 + SRT
-  cleanup(...)          ASR 文本 → 清洗后文本
+
+清洗不在 helpers——agent 自己读 transcript（必要时抓 episode_context）
+直接产出 cleaned text。理由见 SKILL.md「清洗」一节。
 
 通用机制（来自其他模块，re-export 方便用）：
   chunk_audio / stitch_segments / segments_to_srt   见 audio.py + interaction-skills/
@@ -106,25 +108,3 @@ def _transcribe_groq(audio: Path, language: str | None) -> dict:
     return {"text": j["text"], "srt": "", "segments": j.get("segments", [])}
 
 
-def cleanup(transcript: str, episode_context: str | None = None, model: str = "gpt-4.1-mini") -> str:
-    """
-    保守清洗 ASR 文本。只修明显错误：标点、人名/专有名词、重复词。
-    不改写、不总结、不添内容。
-
-    episode_context: 节目页面文本（agent 用 r.jina.ai/<url> 抓即可），
-      用来把 ASR 听错的人名/专有名词修正成 episode 里出现过的写法。
-    """
-    from openai import OpenAI
-
-    client = OpenAI()
-    sys_prompt = (
-        "你是一个保守的转录文本清洗员。只做：标点修正、明显的人名/专有名词错字"
-        "（结合上下文 context 里出现过的写法）、去掉口癖式重复。"
-        "禁止：改写、总结、添加内容、删段。输出仅清洗后的文本，无解释。"
-    )
-    user = f"<context>\n{episode_context or ''}\n</context>\n<transcript>\n{transcript}\n</transcript>"
-    r = client.chat.completions.create(
-        model=model,
-        messages=[{"role": "system", "content": sys_prompt}, {"role": "user", "content": user}],
-    )
-    return r.choices[0].message.content or ""
